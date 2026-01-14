@@ -4,40 +4,55 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int selectedVehicleIndex = 0; // Default selected
+
+  @override
   Widget build(BuildContext context) {
-    // Addis Ababa Coordinates
     final LatLng addisAbaba = const LatLng(9.005401, 38.763611);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('AddisLink Retailer')),
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        title: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: AppTheme.softShadow,
+          ),
+          child: const Text('AddisLink', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        ),
+        backgroundColor: Colors.transparent,
+      ),
       body: Stack(
         children: [
-          // OpenStreetMap View
+          // Map View
           FlutterMap(
             options: MapOptions(
-              initialCenter: addisAbaba, // Center on Addis Ababa
+              initialCenter: addisAbaba,
               initialZoom: 13.0,
             ),
             children: [
               TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                urlTemplate: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+                subdomains: const ['a', 'b', 'c', 'd'],
                 userAgentPackageName: 'com.addislink.retailer',
               ),
               MarkerLayer(
                 markers: [
                   Marker(
                     point: addisAbaba,
-                    width: 40,
-                    height: 40,
-                    child: const Icon(
-                      Icons.location_on, 
-                      color: AppTheme.accent, 
-                      size: 40
-                    ),
+                    width: 50,
+                    height: 50,
+                    child: const Icon(Icons.location_on, color: AppTheme.primary, size: 40),
                   ),
                 ],
               ),
@@ -46,45 +61,46 @@ class HomeScreen extends StatelessWidget {
           
           // Vehicle Selector Sheet
           DraggableScrollableSheet(
-            initialChildSize: 0.3,
-            minChildSize: 0.1,
-            maxChildSize: 0.5,
+            initialChildSize: 0.4,
+            minChildSize: 0.2,
+            maxChildSize: 0.6,
             builder: (context, scrollController) {
               return Container(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-                  boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, -5))
+                  ],
                 ),
                 child: ListView(
                   controller: scrollController,
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
                   children: [
-                    Text(
-                      'Select Vehicle', 
-                      style: Theme.of(context).textTheme.titleLarge,
+                    // Grab Handle
+                    Center(
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 24),
+                        width: 40, height: 4,
+                        decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+                      ),
                     ),
-                    const Divider(),
-                    ListTile(
-                      leading: SvgPicture.asset(AppIcons.moto, width: 40),
-                      title: const Text('Moto'),
-                      subtitle: const Text('Docs/Spare parts'),
-                      trailing: const Text('400-600 ETB'),
-                      onTap: () => context.push('/booking'),
-                    ),
-                     ListTile(
-                      leading: SvgPicture.asset(AppIcons.bajaj, width: 40),
-                      title: const Text('Bajaj'),
-                      subtitle: const Text('Small restocking'),
-                      trailing: const Text('600-900 ETB'),
-                      onTap: () => context.push('/booking'),
-                    ),
-                     ListTile(
-                      leading: SvgPicture.asset(AppIcons.damas, width: 40),
-                      title: const Text('Damas'),
-                      subtitle: const Text('Standard Souq'),
-                      trailing: const Text('1k-1.5k ETB'),
-                      onTap: () => context.push('/booking'),
+
+                    Text('Select Vehicle', style: Theme.of(context).textTheme.titleLarge),
+                    const SizedBox(height: 16),
+
+                    _buildVehicleCard(0, 'Moto', 'Docs/Spare parts', '400-600', AppIcons.moto),
+                    const SizedBox(height: 12),
+                    _buildVehicleCard(1, 'Bajaj', 'Small restocking', '600-900', AppIcons.bajaj),
+                    const SizedBox(height: 12),
+                    _buildVehicleCard(2, 'Damas', 'Standard Souq', '1k-1.5k', AppIcons.damas),
+                    const SizedBox(height: 12),
+                    _buildVehicleCard(3, 'Pickup', 'Construction', '2k-3k', AppIcons.pickup),
+                    
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () => context.push('/booking'),
+                      child: const Text('CONTINUE'),
                     ),
                   ],
                 ),
@@ -92,6 +108,48 @@ class HomeScreen extends StatelessWidget {
             },
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildVehicleCard(int index, String title, String subtitle, String price, String iconPath) {
+    final isSelected = selectedVehicleIndex == index;
+    return GestureDetector(
+      onTap: () => setState(() => selectedVehicleIndex = index),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected ? AppTheme.accent.withOpacity(0.05) : AppTheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? AppTheme.accent : Colors.grey[200]!,
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: isSelected ? AppTheme.softShadow : [],
+        ),
+        child: Row(
+          children: [
+            SvgPicture.asset(iconPath, width: 48),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text('ETB', style: TextStyle(color: Colors.grey[500], fontSize: 10, fontWeight: FontWeight.bold)),
+                Text(price, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              ],
+            )
+          ],
+        ),
       ),
     );
   }
