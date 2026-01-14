@@ -1,0 +1,26 @@
+name: addislink_retailer
+description: "Retailer app for AddisLink Logistics."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  addislink_shared:
+    path: ../addislink_shared
+  flutter_riverpod: ^2.5.1
+  go_router: ^14.0.0
+  flutter_map: ^7.0.0
+  latlong2: ^0.9.1
+  connectivity_plus: ^6.0.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
